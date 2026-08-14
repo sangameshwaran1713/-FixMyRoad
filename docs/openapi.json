@@ -1,0 +1,91 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "FixMyRoad Civic Platform API",
+    "description": "Enterprise OpenAPI specification for FixMyRoad AI-powered road damage reporting, spatial routing, and municipal resolution workflow platform.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "General Health Check",
+        "responses": {
+          "200": { "description": "API is operational" }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "summary": "Process Liveness Check",
+        "responses": {
+          "200": { "description": "Express process is alive" }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Dependency Readiness Check",
+        "responses": {
+          "200": { "description": "MongoDB database is ready" },
+          "503": { "description": "Database dependency unavailable" }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Citizen Registration",
+        "description": "Public registration endpoint (Forces CITIZEN role)",
+        "responses": {
+          "201": { "description": "Registration successful" },
+          "400": { "description": "Invalid input or email already exists" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "User Authentication",
+        "responses": {
+          "200": { "description": "Login successful via HttpOnly cookie" },
+          "401": { "description": "Invalid email or password" }
+        }
+      }
+    },
+    "/complaints": {
+      "get": {
+        "summary": "List Complaints",
+        "responses": {
+          "200": { "description": "Paginated complaint records" }
+        }
+      },
+      "post": {
+        "summary": "Create Road Complaint",
+        "responses": {
+          "201": { "description": "Complaint created and routed" }
+        }
+      }
+    },
+    "/municipality/analytics": {
+      "get": {
+        "summary": "Municipal Analytics Engine",
+        "responses": {
+          "200": { "description": "Aggregated metrics for jurisdiction" },
+          "403": { "description": "Forbidden for Citizens" }
+        }
+      }
+    },
+    "/admin/health/system": {
+      "get": {
+        "summary": "Real-time Microservices System Health Inspector",
+        "responses": {
+          "200": { "description": "Health status of DB, AI Service, Outbox, Storage" }
+        }
+      }
+    }
+  }
+}

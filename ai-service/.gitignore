@@ -1,0 +1,14 @@
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# Large Model Binary Weights (Do not commit binary weight files to Git repository)
+*.pt
+*.onnx
+*.engine
+*.weights
+!models/.gitkeep

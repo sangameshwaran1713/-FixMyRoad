@@ -1,0 +1,242 @@
+import axios from 'axios';
+import { validateImageUrlSSRF, analyzeRoadImageWithAI } from '../services/aiService.js';
+import { reverseGeocode } from '../services/geocodingService.js';
+import { findMunicipalityByCoordinates } from '../services/municipalityService.js';
+import {
+  createComplaintWithTransaction,
+  getCitizenComplaints,
+  getComplaintByIdWithRBAC,
+  getComplaintHistoryWithRBAC,
+} from '../services/complaintService.js';
+
+/**
+ * @desc    Submit a new road defect complaint
+ * @route   POST /api/complaints
+ * @access  Private (CITIZEN role only)
+ */
+export const createComplaint = async (req, res, next) => {
+  try {
+    const { imageUrl, description, location } = req.body;
+
+    // 1. Basic Payload Validation
+    if (!imageUrl) {
+      return res.status(400).json({
+        success: false,
+        code: 'VALIDATION_ERROR',
+        message: 'imageUrl is required',
+      });
+    }
+
+    if (!location || location.latitude === undefined || location.longitude === undefined) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_COORDINATES',
+        message: 'location with valid latitude and longitude is required',
+      });
+    }
+
+    const latitude = parseFloat(location.latitude);
+    const longitude = parseFloat(location.longitude);
+
+    if (isNaN(latitude) || isNaN(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_COORDINATES',
+        message: 'Latitude must be between -90 and 90, Longitude between -180 and 180.',
+      });
+    }
+
+    // 2. SSRF Image URL Validation & Redirect-Blocked Image Access Verification
+    validateImageUrlSSRF(imageUrl);
+
+    try {
+      await axios.get(imageUrl, {
+        responseType: 'arraybuffer',
+        timeout: 10000,
+        maxRedirects: 0, // Disable redirects to prevent SSRF redirect bypasses to untrusted hosts
+        headers: {
+          'User-Agent': 'FixMyRoad-Backend/1.0',
+        },
+      });
+    } catch (imgErr) {
+      return res.status(400).json({
+        success: false,
+        code: 'IMAGE_INVALID',
+        message: 'Unable to verify uploaded image on Cloudinary storage.',
+      });
+    }
+
+    // 3. Server-Side Reverse Geocoding
+    let addressData;
+    try {
+      addressData = await reverseGeocode(latitude, longitude);
+    } catch (err) {
+      addressData = {
+        address: 'Captured Location',
+        city: '',
+        district: '',
+        state: '',
+        country: '',
+        postalCode: '',
+      };
+    }
+
+    // 4. Server-Side GeoJSON Municipality Resolution ($geoIntersects)
+    const munResult = await findMunicipalityByCoordinates(latitude, longitude);
+    if (!munResult.success) {
+      const statusCode = munResult.code === 'MUNICIPALITY_NOT_FOUND' ? 404 : 409;
+      return res.status(statusCode).json(munResult);
+    }
+
+    const resolvedMunicipality = munResult.data.municipality;
+
+    // 5. Server-Side AI Analysis Execution
+    const allowAiUnavailable = process.env.ALLOW_AI_UNAVAILABLE_SUBMISSION === 'true';
+    let aiResult;
+
+    try {
+      aiResult = await analyzeRoadImageWithAI(imageUrl);
+    } catch (aiErr) {
+      if (!allowAiUnavailable) {
+        return res.status(503).json({
+          success: false,
+          code: 'AI_UNAVAILABLE',
+          message: 'Road damage AI analysis service is currently unavailable. Please try again later.',
+        });
+      }
+    }
+
+    if (aiResult && aiResult.modelLoaded === false && !allowAiUnavailable) {
+      return res.status(400).json({
+        success: false,
+        code: 'AI_UNAVAILABLE',
+        message: 'Road damage AI model is not configured. Submission is disallowed until AI model is active.',
+      });
+    }
+
+    // Determine derived AI fields
+    const issueType = aiResult?.primaryIssue || 'OTHER';
+    const aiConfidence = aiResult?.overallConfidence || 0;
+    const severity = aiResult?.severity || 'MEDIUM';
+
+    // 6. Citizen ID derived strictly from req.user._id
+    const citizenId = req.user._id;
+
+    // 7. Sanitize Description
+    const sanitizedDescription = description && typeof description === 'string'
+      ? description.trim().substring(0, 1000)
+      : '';
+
+    // 8. Assemble Server-Validated Complaint Payload
+    const complaintPayload = {
+      citizenId,
+      imageUrl,
+      issueType,
+      aiConfidence,
+      severity,
+      description: sanitizedDescription,
+      location: {
+        type: 'Point',
+        coordinates: [longitude, latitude],
+      },
+      locationSource: location.source === 'MAP' ? 'MAP' : 'GPS',
+      locationAccuracy: location.accuracy ? parseFloat(location.accuracy) : null,
+      address: addressData.address || '',
+      city: addressData.city || '',
+      district: addressData.district || '',
+      state: addressData.state || '',
+      country: addressData.country || '',
+      postalCode: addressData.postalCode || '',
+      municipalityId: resolvedMunicipality.id,
+    };
+
+    // 9. Execute Complaint Creation Transaction
+    const newComplaint = await createComplaintWithTransaction(complaintPayload);
+
+    res.status(201).json({
+      success: true,
+      message: 'Complaint submitted successfully',
+      data: {
+        complaint: newComplaint,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get authenticated citizen's submitted complaints
+ * @route   GET /api/complaints/my
+ * @access  Private (CITIZEN role only)
+ */
+export const getMyComplaints = async (req, res, next) => {
+  try {
+    const { page, limit, status } = req.query;
+    const result = await getCitizenComplaints({
+      citizenId: req.user._id,
+      page,
+      limit,
+      status,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get single complaint details by complaintId
+ * @route   GET /api/complaints/:complaintId
+ * @access  Private (Authenticated users with RBAC check)
+ */
+export const getComplaintById = async (req, res, next) => {
+  try {
+    const complaint = await getComplaintByIdWithRBAC(req.params.complaintId, req.user);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        complaint,
+      },
+    });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get status history timeline for a complaint
+ * @route   GET /api/complaints/:complaintId/history
+ * @access  Private (Authenticated users with RBAC check)
+ */
+export const getComplaintHistory = async (req, res, next) => {
+  try {
+    const history = await getComplaintHistoryWithRBAC(req.params.complaintId, req.user);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        history,
+      },
+    });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    next(error);
+  }
+};
