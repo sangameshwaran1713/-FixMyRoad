@@ -4,30 +4,148 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-white min-h-screen overflow-x-hidden;
+    @apply bg-slate-50/80 text-slate-900 selection:bg-slate-900 selection:text-white min-h-screen overflow-x-hidden antialiased;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  }
+  
+  h1, h2, h3, .font-heading {
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
   }
 }
 
-.glass-panel {
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Official Civic Subtitle Badge */
+.civic-subtitle-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  background-color: rgba(30, 58, 138, 0.06);
+  border: 1px solid rgba(30, 58, 138, 0.15);
+  color: #1e3a8a;
+  font-size: 0.725rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
 }
 
-.glass-card {
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Professional Line Divider */
+.line-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.25rem 0;
 }
 
-.glass-card:hover {
-  border-color: rgba(56, 189, 248, 0.3);
+.line-divider::before,
+.line-divider::after {
+  content: '';
+  height: 1px;
+  width: 60px;
+  background-color: #cbd5e1;
+}
+
+.line-divider-lg::before,
+.line-divider-lg::after {
+  width: 120px;
+}
+
+/* Professional Civic Buttons */
+.civic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 0.75rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.civic-btn-primary {
+  background-color: #0f172a;
+  color: #ffffff;
+  border: 1px solid #0f172a;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+}
+
+.civic-btn-primary:hover {
+  background-color: #1e293b;
+  border-color: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.18);
+}
+
+.civic-btn-outline {
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+}
+
+.civic-btn-outline:hover {
+  border-color: #0f172a;
+  background-color: #f8fafc;
+  color: #020617;
+  transform: translateY(-1px);
+}
+
+/* Glass & Panel Styles mapped to Professional Civic Off-White theme */
+.glass-panel, .civic-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.04);
+  border-radius: 1rem;
+}
+
+.glass-card, .civic-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover, .civic-card:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(14, 165, 233, 0.15);
 }
 
-.glow-gradient {
-  background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.15), transparent 70%);
+/* Framing logo box matching Official Municipal Seal / Box */
+.frame-box {
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 2px solid #0f172a;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

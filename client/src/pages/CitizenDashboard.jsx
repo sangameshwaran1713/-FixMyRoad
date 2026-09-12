@@ -7,72 +7,77 @@ const CitizenDashboard = () => {
   const { user } = useAuth();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-6 py-12 space-y-10">
       {/* Header Banner */}
-      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800 mb-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="editorial-panel p-8 border border-[#e5e5e0] bg-white">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-              <UserCheck className="w-7 h-7" />
-            </div>
+            <div className="frame-box text-sm">F</div>
             <div>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-2xl font-bold text-white">{user?.name}</h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <div className="flex items-center space-x-3">
+                <h1 className="font-serif text-3xl font-bold tracking-[0.15em] uppercase text-neutral-900">
+                  {user?.name}
+                </h1>
+                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold px-2 py-0.5 border border-neutral-300 text-neutral-600 bg-[#f9f8f6]">
                   {user?.role}
                 </span>
               </div>
-              <p className="text-sm text-slate-400 mt-1">{user?.email} • {user?.phone || 'No phone provided'}</p>
+              <p className="text-xs text-neutral-500 font-light mt-1">
+                {user?.email} • {user?.phone || 'No phone registered'}
+              </p>
             </div>
           </div>
 
           <Link 
             id="link-new-report"
             to="/citizen/report"
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium text-sm transition-all flex items-center space-x-2 shadow-lg shadow-cyan-500/20 hover:scale-[1.02]"
+            className="editorial-btn text-xs flex items-center space-x-2"
           >
-            <Camera className="w-4 h-4" />
-            <span>New Damage Report</span>
+            <Camera className="w-4 h-4 mr-1" />
+            <span>NEW DAMAGE REPORT</span>
           </Link>
         </div>
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="glass-card p-6 rounded-2xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="editorial-card p-6 border border-[#e5e5e0]">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Reports</span>
-            <FileText className="w-5 h-5 text-cyan-400" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">TOTAL REPORTS</span>
+            <FileText className="w-4 h-4 text-neutral-400" />
           </div>
-          <p className="text-3xl font-extrabold text-white">0</p>
-          <p className="text-xs text-slate-500 mt-1">Road damage reports filed</p>
+          <p className="font-serif text-4xl font-bold text-neutral-900 tracking-wider">0</p>
+          <p className="text-xs text-neutral-500 font-light mt-1">Filed civic road complaints</p>
         </div>
 
-        <div className="glass-card p-6 rounded-2xl">
+        <div className="editorial-card p-6 border border-[#e5e5e0]">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">In Progress</span>
-            <Clock className="w-5 h-5 text-amber-400" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">IN PROGRESS</span>
+            <Clock className="w-4 h-4 text-neutral-400" />
           </div>
-          <p className="text-3xl font-extrabold text-white">0</p>
-          <p className="text-xs text-slate-500 mt-1">Pending municipal repair</p>
+          <p className="font-serif text-4xl font-bold text-neutral-900 tracking-wider">0</p>
+          <p className="text-xs text-neutral-500 font-light mt-1">Under municipal repair</p>
         </div>
 
-        <div className="glass-card p-6 rounded-2xl">
+        <div className="editorial-card p-6 border border-[#e5e5e0]">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Resolved</span>
-            <CheckCircle className="w-5 h-5 text-emerald-400" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">RESOLVED</span>
+            <CheckCircle className="w-4 h-4 text-neutral-400" />
           </div>
-          <p className="text-3xl font-extrabold text-white">0</p>
-          <p className="text-xs text-slate-500 mt-1">Successfully repaired roads</p>
+          <p className="font-serif text-4xl font-bold text-neutral-900 tracking-wider">0</p>
+          <p className="text-xs text-neutral-500 font-light mt-1">Verified road repairs</p>
         </div>
       </div>
 
-      {/* Placeholder Notice */}
-      <div className="glass-panel p-8 rounded-2xl border border-slate-800/80 text-center">
-        <Shield className="w-10 h-10 text-cyan-400 mx-auto mb-3" />
-        <h3 className="text-lg font-bold text-white">Citizen Portal — Phase 4 Image Upload Active</h3>
-        <p className="text-sm text-slate-400 max-w-xl mx-auto mt-2">
-          Click <strong className="text-white">"New Damage Report"</strong> to upload road damage photos using the Multer + Sharp + Cloudinary pipeline. AI classification and GPS mapping will be integrated in upcoming phases.
+      {/* Portal Status Panel */}
+      <div className="editorial-panel p-8 text-center space-y-3 border border-[#e5e5e0]">
+        <p className="font-script-accent text-2xl text-neutral-500">Infrastructure Intelligence</p>
+        <h3 className="font-serif text-2xl font-bold tracking-[0.2em] uppercase text-neutral-900">
+          CITIZEN REPORTING ENGINE ACTIVE
+        </h3>
+        <div className="line-divider max-w-xs mx-auto">❖</div>
+        <p className="text-xs text-neutral-600 font-light max-w-xl mx-auto leading-relaxed">
+          Submit road damage reports with high-resolution images, GPS metadata extraction, and real-time municipal status updates.
         </p>
       </div>
     </div>

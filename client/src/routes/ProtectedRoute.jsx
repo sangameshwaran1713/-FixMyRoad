@@ -27,7 +27,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     if (user.role === 'SUPER_ADMIN') {
       return <Navigate to="/admin/dashboard" replace />;
     }
-    if (user.role === 'MUNICIPALITY_ADMIN') {
+    if (user.role === 'MUNICIPALITY_ADMIN' || user.role === 'MUNICIPALITY_OFFICER') {
       return <Navigate to="/municipality/dashboard" replace />;
     }
     return <Navigate to="/citizen/dashboard" replace />;

@@ -22,13 +22,21 @@ import OperationsDashboardPage from '../pages/admin/OperationsDashboardPage';
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public Landing & Authentication */}
-      <Route path="/" element={<LandingPage />} />
+      {/* Public Authentication Routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
       {/* Role-Protected Routes with MainLayout */}
       <Route element={<MainLayout />}>
+        {/* Protected Main Site Landing */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <LandingPage />
+            </ProtectedRoute>
+          }
+        />
         {/* CITIZEN Portal */}
         <Route
           path="/citizen/dashboard"

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Phone, Lock, ArrowRight, ShieldCheck, AlertCircle, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Phone, Lock, AlertCircle, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -16,8 +16,21 @@ const RegisterPage = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register } = useAuth();
+  const { register, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if user is already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'SUPER_ADMIN') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (user.role === 'MUNICIPALITY_ADMIN' || user.role === 'MUNICIPALITY_OFFICER') {
+        navigate('/municipality/dashboard', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -82,19 +95,20 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 max-w-lg mx-auto">
-      <div className="glass-panel p-8 rounded-2xl shadow-2xl border border-slate-800">
+    <div className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-lg mx-auto bg-[#f9f8f6]">
+      <div className="editorial-panel p-8 sm:p-10 border border-[#e5e5e0] bg-white shadow-sm">
         <div className="text-center space-y-2 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/20">
-            <ShieldCheck className="w-7 h-7 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">Create Citizen Account</h2>
-          <p className="text-sm text-slate-400">Join FixMyRoad to report & track civic road defects</p>
+          <div className="frame-box mx-auto text-xs">F</div>
+          <p className="font-script-accent text-2xl text-neutral-500">Join FixMyRoad</p>
+          <h2 className="font-serif text-3xl font-bold tracking-[0.2em] uppercase text-neutral-900">
+            CREATE ACCOUNT
+          </h2>
+          <div className="line-divider max-w-xs mx-auto">❖</div>
         </div>
 
         {errorMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm flex items-start space-x-2">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div className="mb-6 p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -102,51 +116,51 @@ const RegisterPage = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name Input */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5">
-              Full Name <span className="text-rose-400">*</span>
+            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-700 mb-1.5">
+              Full Name <span className="text-rose-600">*</span>
             </label>
             <div className="relative">
-              <User className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" />
+              <User className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
               <input
                 id="register-name"
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="John Doe"
+                placeholder="Jane Doe"
                 required
-                className="w-full bg-slate-900/80 border border-slate-700/80 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl py-3 pl-11 pr-4 text-slate-100 placeholder-slate-500 text-sm transition-all outline-none"
+                className="w-full bg-[#f9f8f6] border border-[#e5e5e0] focus:bg-white focus:border-neutral-900 py-2.5 pl-10 pr-4 text-neutral-900 placeholder-neutral-400 text-xs outline-none transition-all"
               />
             </div>
           </div>
 
           {/* Email Input */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5">
-              Email Address <span className="text-rose-400">*</span>
+            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-700 mb-1.5">
+              Email Address <span className="text-rose-600">*</span>
             </label>
             <div className="relative">
-              <Mail className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" />
+              <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
               <input
                 id="register-email"
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="john@example.com"
+                placeholder="jane@example.com"
                 required
-                className="w-full bg-slate-900/80 border border-slate-700/80 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl py-3 pl-11 pr-4 text-slate-100 placeholder-slate-500 text-sm transition-all outline-none"
+                className="w-full bg-[#f9f8f6] border border-[#e5e5e0] focus:bg-white focus:border-neutral-900 py-2.5 pl-10 pr-4 text-neutral-900 placeholder-neutral-400 text-xs outline-none transition-all"
               />
             </div>
           </div>
 
           {/* Phone Input */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5">
-              Phone Number <span className="text-slate-500">(Optional)</span>
+            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-700 mb-1.5">
+              Phone Number <span className="text-neutral-400 font-normal">(Optional)</span>
             </label>
             <div className="relative">
-              <Phone className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" />
+              <Phone className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
               <input
                 id="register-phone"
                 type="tel"
@@ -154,18 +168,18 @@ const RegisterPage = () => {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="+1 234 567 8900"
-                className="w-full bg-slate-900/80 border border-slate-700/80 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl py-3 pl-11 pr-4 text-slate-100 placeholder-slate-500 text-sm transition-all outline-none"
+                className="w-full bg-[#f9f8f6] border border-[#e5e5e0] focus:bg-white focus:border-neutral-900 py-2.5 pl-10 pr-4 text-neutral-900 placeholder-neutral-400 text-xs outline-none transition-all"
               />
             </div>
           </div>
 
           {/* Password Input */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5">
-              Password <span className="text-rose-400">*</span>
+            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-700 mb-1.5">
+              Password <span className="text-rose-600">*</span>
             </label>
             <div className="relative">
-              <Lock className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" />
+              <Lock className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
               <input
                 id="register-password"
                 type={showPassword ? 'text' : 'password'}
@@ -174,31 +188,31 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
-                className="w-full bg-slate-900/80 border border-slate-700/80 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl py-3 pl-11 pr-11 text-slate-100 placeholder-slate-500 text-sm transition-all outline-none"
+                className="w-full bg-[#f9f8f6] border border-[#e5e5e0] focus:bg-white focus:border-neutral-900 py-2.5 pl-10 pr-10 text-neutral-900 placeholder-neutral-400 text-xs outline-none transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-slate-500 hover:text-slate-300 cursor-pointer"
+                className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-700 cursor-pointer"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
 
             {/* Password Policy Indicator */}
             {formData.password && (
-              <div className="mt-2.5 p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs space-y-1">
+              <div className="mt-2.5 p-3 bg-[#f9f8f6] border border-[#e5e5e0] text-[11px] space-y-1">
                 <div className="flex items-center space-x-1.5">
-                  <CheckCircle2 className={`w-3.5 h-3.5 ${passRules.length ? 'text-emerald-400' : 'text-slate-600'}`} />
-                  <span className={passRules.length ? 'text-slate-200' : 'text-slate-500'}>Min 8 characters</span>
+                  <CheckCircle2 className={`w-3.5 h-3.5 ${passRules.length ? 'text-neutral-900' : 'text-neutral-400'}`} />
+                  <span className={passRules.length ? 'text-neutral-900 font-medium' : 'text-neutral-500'}>Min 8 characters</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
-                  <CheckCircle2 className={`w-3.5 h-3.5 ${passRules.upper && passRules.lower ? 'text-emerald-400' : 'text-slate-600'}`} />
-                  <span className={passRules.upper && passRules.lower ? 'text-slate-200' : 'text-slate-500'}>Uppercase & lowercase letters</span>
+                  <CheckCircle2 className={`w-3.5 h-3.5 ${passRules.upper && passRules.lower ? 'text-neutral-900' : 'text-neutral-400'}`} />
+                  <span className={passRules.upper && passRules.lower ? 'text-neutral-900 font-medium' : 'text-neutral-500'}>Uppercase & lowercase</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
-                  <CheckCircle2 className={`w-3.5 h-3.5 ${passRules.number && passRules.special ? 'text-emerald-400' : 'text-slate-600'}`} />
-                  <span className={passRules.number && passRules.special ? 'text-slate-200' : 'text-slate-500'}>At least 1 number & 1 special character (@$!%*)</span>
+                  <CheckCircle2 className={`w-3.5 h-3.5 ${passRules.number && passRules.special ? 'text-neutral-900' : 'text-neutral-400'}`} />
+                  <span className={passRules.number && passRules.special ? 'text-neutral-900 font-medium' : 'text-neutral-500'}>Number & special character</span>
                 </div>
               </div>
             )}
@@ -206,11 +220,11 @@ const RegisterPage = () => {
 
           {/* Confirm Password Input */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5">
-              Confirm Password <span className="text-rose-400">*</span>
+            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-700 mb-1.5">
+              Confirm Password <span className="text-rose-600">*</span>
             </label>
             <div className="relative">
-              <Lock className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" />
+              <Lock className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
               <input
                 id="register-confirm-password"
                 type={showPassword ? 'text' : 'password'}
@@ -219,7 +233,7 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
-                className="w-full bg-slate-900/80 border border-slate-700/80 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl py-3 pl-11 pr-4 text-slate-100 placeholder-slate-500 text-sm transition-all outline-none"
+                className="w-full bg-[#f9f8f6] border border-[#e5e5e0] focus:bg-white focus:border-neutral-900 py-2.5 pl-10 pr-4 text-neutral-900 placeholder-neutral-400 text-xs outline-none transition-all"
               />
             </div>
           </div>
@@ -229,18 +243,17 @@ const RegisterPage = () => {
             id="btn-register-submit"
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/35 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+            className="w-full editorial-btn bg-neutral-900 text-white hover:bg-neutral-800 py-3.5 text-xs font-bold tracking-[0.2em] mt-2 cursor-pointer disabled:opacity-50"
           >
-            <span>{isSubmitting ? 'Creating Account...' : 'Register Account'}</span>
-            {!isSubmitting && <ArrowRight className="w-4 h-4" />}
+            {isSubmitting ? 'Creating Account...' : 'REGISTER ACCOUNT'}
           </button>
         </form>
 
-        <div className="mt-6 text-center border-t border-slate-800 pt-5">
-          <p className="text-sm text-slate-400">
+        <div className="mt-6 text-center border-t border-[#e5e5e0] pt-5">
+          <p className="text-xs text-neutral-500 font-light">
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-cyan-400 hover:text-cyan-300 hover:underline">
-              Sign In
+            <Link to="/login" className="font-semibold text-neutral-900 hover:underline ml-1">
+              Sign In →
             </Link>
           </p>
         </div>

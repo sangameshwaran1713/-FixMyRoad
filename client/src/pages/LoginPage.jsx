@@ -1,25 +1,63 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { 
+  Lock, 
+  Mail, 
+  ArrowRight, 
+  ShieldCheck, 
+  AlertCircle, 
+  Eye, 
+  EyeOff, 
+  Cpu, 
+  MapPin, 
+  User, 
+  Building2, 
+  Check
+} from 'lucide-react';
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ 
+    email: 'citizen@fixmyroad.local', 
+    password: 'Citizen@12345' 
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeRole, setActiveRole] = useState('citizen');
 
-  const { login } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = location.state?.from?.pathname || null;
+
+  // Redirect if user is already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      if (from && from !== '/login') {
+        navigate(from, { replace: true });
+      } else if (user.role === 'SUPER_ADMIN') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (user.role === 'MUNICIPALITY_ADMIN' || user.role === 'MUNICIPALITY_OFFICER') {
+        navigate('/municipality/dashboard', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, from, navigate]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
+    if (errorMessage) setErrorMessage('');
+  };
+
+  const setPresetCredentials = (role, email, password) => {
+    setActiveRole(role);
+    setFormData({ email, password });
     if (errorMessage) setErrorMessage('');
   };
 
@@ -42,7 +80,7 @@ const LoginPage = () => {
           navigate(from, { replace: true });
         } else if (role === 'SUPER_ADMIN') {
           navigate('/admin/dashboard', { replace: true });
-        } else if (role === 'MUNICIPALITY_ADMIN') {
+        } else if (role === 'MUNICIPALITY_ADMIN' || role === 'MUNICIPALITY_OFFICER') {
           navigate('/municipality/dashboard', { replace: true });
         } else {
           navigate('/citizen/dashboard', { replace: true });
@@ -58,91 +96,185 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-md mx-auto">
-      <div className="glass-panel p-8 rounded-2xl shadow-2xl border border-slate-800">
-        <div className="text-center space-y-2 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/20">
-            <ShieldCheck className="w-7 h-7 text-white" />
+    <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#f9f8f6]">
+      {/* Main Container */}
+      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 bg-white border border-[#e5e5e0] shadow-sm">
+        
+        {/* Left Side: Editorial Banner */}
+        <div className="lg:col-span-5 bg-[#111111] p-10 flex flex-col justify-between text-white space-y-8">
+          <div className="space-y-4">
+            <div className="frame-box border-white text-white">F</div>
+            <p className="font-script-accent text-3xl text-neutral-300">Secure Access</p>
+            <h2 className="font-serif text-3xl font-bold tracking-[0.2em] uppercase text-white">
+              CIVIC PORTAL
+            </h2>
+            <div className="line-divider border-white/20 my-4 text-neutral-400">❖</div>
+            <p className="text-xs text-neutral-400 font-light leading-relaxed">
+              Access AI damage inspection records, jurisdiction routing logs, and repair status monitoring.
+            </p>
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">Welcome Back</h2>
-          <p className="text-sm text-slate-400">Sign in to your FixMyRoad account</p>
-        </div>
 
-        {errorMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm flex items-start space-x-2">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email Input */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" />
-              <input
-                id="login-email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="citizen@example.com"
-                required
-                className="w-full bg-slate-900/80 border border-slate-700/80 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl py-3 pl-11 pr-4 text-slate-100 placeholder-slate-500 text-sm transition-all outline-none"
-              />
+          <div className="space-y-4 border-t border-neutral-800 pt-6">
+            <div className="flex items-start space-x-3 text-xs text-neutral-300 font-light">
+              <Cpu className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
+              <span>YOLO AI Vision Automated Scoring</span>
+            </div>
+            <div className="flex items-start space-x-3 text-xs text-neutral-300 font-light">
+              <MapPin className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
+              <span>Geospatial Ward Boundary Dispatch</span>
             </div>
           </div>
 
-          {/* Password Input */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" />
-              <input
-                id="login-password"
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                required
-                className="w-full bg-slate-900/80 border border-slate-700/80 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl py-3 pl-11 pr-11 text-slate-100 placeholder-slate-500 text-sm transition-all outline-none"
-              />
+          <div className="text-[10px] uppercase tracking-[0.2em] text-neutral-500 font-medium">
+            FixMyRoad Engine v1.0
+          </div>
+        </div>
+
+        {/* Right Side: Form */}
+        <div className="lg:col-span-7 bg-white p-8 lg:p-12 flex flex-col justify-center">
+          <div className="max-w-md mx-auto w-full space-y-6">
+            
+            <div>
+              <p className="font-script-accent text-2xl text-neutral-500">Welcome Back</p>
+              <h2 className="font-serif text-3xl font-bold tracking-[0.2em] uppercase text-neutral-900">
+                SIGN IN
+              </h2>
+            </div>
+
+            {/* Test Credentials Switcher */}
+            <div className="p-4 border border-[#e5e5e0] bg-[#f9f8f6] space-y-3">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-600 block">
+                Quick Test Accounts
+              </span>
+
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPresetCredentials('citizen', 'citizen@fixmyroad.local', 'Citizen@12345')}
+                  className={`p-2.5 text-left border transition-all cursor-pointer ${
+                    activeRole === 'citizen'
+                      ? 'bg-neutral-900 border-neutral-900 text-white'
+                      : 'bg-white border-[#e5e5e0] text-neutral-700 hover:border-neutral-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <User className="w-3.5 h-3.5" />
+                    {activeRole === 'citizen' && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <p className="text-[11px] font-bold tracking-wider uppercase">Citizen</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPresetCredentials('municipality', 'municipality@fixmyroad.local', 'Municipality@12345')}
+                  className={`p-2.5 text-left border transition-all cursor-pointer ${
+                    activeRole === 'municipality'
+                      ? 'bg-neutral-900 border-neutral-900 text-white'
+                      : 'bg-white border-[#e5e5e0] text-neutral-700 hover:border-neutral-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <Building2 className="w-3.5 h-3.5" />
+                    {activeRole === 'municipality' && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <p className="text-[11px] font-bold tracking-wider uppercase">Officer</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPresetCredentials('admin', 'admin@fixmyroad.local', 'Admin@12345')}
+                  className={`p-2.5 text-left border transition-all cursor-pointer ${
+                    activeRole === 'admin'
+                      ? 'bg-neutral-900 border-neutral-900 text-white'
+                      : 'bg-white border-[#e5e5e0] text-neutral-700 hover:border-neutral-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    {activeRole === 'admin' && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <p className="text-[11px] font-bold tracking-wider uppercase">Admin</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Error Banner */}
+            {errorMessage && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            {/* Auth Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-700 mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+                  <input
+                    id="login-email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="email@example.com"
+                    required
+                    className="w-full bg-[#f9f8f6] border border-[#e5e5e0] focus:bg-white focus:border-neutral-900 py-2.5 pl-10 pr-4 text-neutral-900 placeholder-neutral-400 text-xs outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-700 mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    required
+                    className="w-full bg-[#f9f8f6] border border-[#e5e5e0] focus:bg-white focus:border-neutral-900 py-2.5 pl-10 pr-10 text-neutral-900 placeholder-neutral-400 text-xs outline-none transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-700 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
               <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-slate-500 hover:text-slate-300 cursor-pointer"
+                id="btn-login-submit"
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full editorial-btn bg-neutral-900 text-white hover:bg-neutral-800 py-3.5 text-xs font-bold tracking-[0.2em] mt-2 cursor-pointer disabled:opacity-50"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {isSubmitting ? 'Authenticating...' : 'SIGN IN TO DASHBOARD'}
               </button>
+            </form>
+
+            <div className="text-center pt-4 border-t border-[#e5e5e0]">
+              <p className="text-xs text-neutral-500 font-light">
+                Don't have an account?{' '}
+                <Link to="/register" className="font-semibold text-neutral-900 hover:underline ml-1">
+                  Create Account →
+                </Link>
+              </p>
             </div>
+
           </div>
-
-          {/* Submit Button */}
-          <button
-            id="btn-login-submit"
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/35 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
-          >
-            <span>{isSubmitting ? 'Signing in...' : 'Sign In'}</span>
-            {!isSubmitting && <ArrowRight className="w-4 h-4" />}
-          </button>
-        </form>
-
-        <div className="mt-8 text-center border-t border-slate-800 pt-6">
-          <p className="text-sm text-slate-400">
-            Don't have an account?{' '}
-            <Link to="/register" className="font-semibold text-cyan-400 hover:text-cyan-300 hover:underline">
-              Register
-            </Link>
-          </p>
         </div>
+
       </div>
     </div>
   );

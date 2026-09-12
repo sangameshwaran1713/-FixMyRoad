@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, FileText, AlertTriangle, CheckCircle2, Clock, ShieldCheck, Loader2, ArrowRight, RefreshCw, ChevronRight, RotateCcw, BarChart3 } from 'lucide-react';
+import { Building2, ArrowRight, RefreshCw, ChevronRight, RotateCcw, BarChart3, Loader2 } from 'lucide-react';
 import { getMunicipalityStatsApi, getMunicipalityComplaintsApi } from '../services/municipalityComplaintService';
 import { getMunicipalityReopenRequestsApi } from '../services/reopenService';
 import { useAuth } from '../context/AuthContext';
@@ -48,56 +48,56 @@ const MunicipalityDashboard = () => {
   const getStatusBadge = (st) => {
     switch (st) {
       case 'SUBMITTED':
-        return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
+        return 'bg-neutral-100 text-neutral-800 border-neutral-300';
       case 'UNDER_REVIEW':
       case 'ACCEPTED':
       case 'ASSIGNED':
       case 'IN_PROGRESS':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        return 'bg-amber-50 text-amber-900 border-amber-200';
       case 'RESOLVED':
       case 'CLOSED':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        return 'bg-emerald-50 text-emerald-900 border-emerald-200';
       case 'REJECTED':
-        return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+        return 'bg-rose-50 text-rose-900 border-rose-200';
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-neutral-100 text-neutral-600 border-neutral-200';
     }
   };
 
   const getSeverityBadge = (sev) => {
     switch (sev) {
       case 'CRITICAL':
-        return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+        return 'bg-rose-900 text-white font-bold';
       case 'HIGH':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        return 'bg-amber-100 text-amber-900 border-amber-300';
       case 'MEDIUM':
-        return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
+        return 'bg-[#f4f3ef] text-neutral-800 border-neutral-300';
       default:
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        return 'bg-neutral-100 text-neutral-600 border-neutral-200';
     }
   };
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="py-10 px-6 max-w-7xl mx-auto space-y-10 bg-[#f9f8f6]">
       {/* Header Banner */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="editorial-panel p-8 border border-[#e5e5e0] bg-white flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="inline-flex items-center space-x-2 text-xs font-semibold text-emerald-400 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/30 mb-3">
+          <div className="inline-flex items-center space-x-2 text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-600 border border-neutral-300 px-3 py-1 bg-[#f9f8f6] mb-3">
             <Building2 className="w-3.5 h-3.5" />
-            <span>Authorized Jurisdiction Portal</span>
+            <span>JURISDICTION OPERATIONS CENTER</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Municipality Operations Center
+          <h1 className="font-serif text-3xl font-bold tracking-[0.15em] uppercase text-neutral-900">
+            MUNICIPAL OPERATIONS
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Logged in as <span className="text-slate-200 font-semibold">{user?.name}</span> ({user?.role})
+          <p className="text-xs text-neutral-500 font-light mt-1">
+            Logged officer: <span className="text-neutral-900 font-semibold">{user?.name}</span> ({user?.role})
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={loadDashboardData}
-            className="p-3 rounded-xl glass-panel text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700 transition-all cursor-pointer"
+            className="p-2.5 border border-[#e5e5e0] hover:border-neutral-900 text-neutral-700 transition-all cursor-pointer bg-white"
             title="Refresh Metrics"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -105,86 +105,88 @@ const MunicipalityDashboard = () => {
 
           <Link
             to="/municipality/analytics"
-            className="px-4 py-3 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 font-bold text-xs transition-all flex items-center space-x-2"
+            className="editorial-btn editorial-btn-secondary text-xs"
           >
-            <BarChart3 className="w-4 h-4" />
-            <span>Analytics & CSV Report</span>
+            <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+            <span>ANALYTICS & CSV</span>
           </Link>
 
           <Link
             to="/municipality/reopen-requests"
-            className="px-4 py-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:bg-amber-500/30 font-bold text-xs transition-all flex items-center space-x-2"
+            className="editorial-btn editorial-btn-secondary text-xs"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>Reopen Requests ({pendingReopenCount})</span>
+            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+            <span>REOPEN REQUESTS ({pendingReopenCount})</span>
           </Link>
 
           <Link
             to="/municipality/complaints"
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xs shadow-lg shadow-cyan-500/20 hover:scale-[1.02] transition-all flex items-center space-x-2"
+            className="editorial-btn text-xs bg-neutral-900 text-white hover:bg-neutral-800"
           >
-            <span>Manage Complaints</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>MANAGE COMPLAINTS</span>
+            <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
           </Link>
         </div>
       </div>
 
       {/* Metrics Cards */}
       {loading ? (
-        <div className="p-12 text-center text-cyan-400">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto" />
-          <p className="text-xs text-slate-400 mt-2">Loading municipal metrics...</p>
+        <div className="p-12 text-center text-neutral-800">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-600" />
+          <p className="text-xs text-neutral-500 mt-2 font-light">Loading municipal metrics...</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Total Complaints</span>
-            <p className="text-2xl font-black text-white">{stats?.total || 0}</p>
+          <div className="editorial-card p-5 border border-[#e5e5e0] bg-white space-y-1">
+            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Total</span>
+            <p className="font-serif text-3xl font-bold text-neutral-900">{stats?.total || 0}</p>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl border border-cyan-500/30 bg-cyan-950/10 space-y-1">
-            <span className="text-[11px] font-semibold text-cyan-400 uppercase tracking-wider block">Submitted</span>
-            <p className="text-2xl font-black text-cyan-300">{stats?.submitted || 0}</p>
+          <div className="editorial-card p-5 border border-[#e5e5e0] bg-white space-y-1">
+            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Submitted</span>
+            <p className="font-serif text-3xl font-bold text-neutral-900">{stats?.submitted || 0}</p>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-amber-950/10 space-y-1">
-            <span className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider block">Under Review</span>
-            <p className="text-2xl font-black text-amber-300">{stats?.underReview || 0}</p>
+          <div className="editorial-card p-5 border border-[#e5e5e0] bg-white space-y-1">
+            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Review</span>
+            <p className="font-serif text-3xl font-bold text-neutral-900">{stats?.underReview || 0}</p>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl border border-indigo-500/30 bg-indigo-950/10 space-y-1">
-            <span className="text-[11px] font-semibold text-indigo-400 uppercase tracking-wider block">In Progress</span>
-            <p className="text-2xl font-black text-indigo-300">{stats?.inProgress || 0}</p>
+          <div className="editorial-card p-5 border border-[#e5e5e0] bg-white space-y-1">
+            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Progress</span>
+            <p className="font-serif text-3xl font-bold text-neutral-900">{stats?.inProgress || 0}</p>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/10 space-y-1">
-            <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider block">Resolved</span>
-            <p className="text-2xl font-black text-emerald-300">{stats?.resolved || 0}</p>
+          <div className="editorial-card p-5 border border-[#e5e5e0] bg-white space-y-1">
+            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Resolved</span>
+            <p className="font-serif text-3xl font-bold text-neutral-900">{stats?.resolved || 0}</p>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-amber-950/10 space-y-1">
-            <span className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider block">Reopen Pending</span>
-            <p className="text-2xl font-black text-amber-300">{pendingReopenCount}</p>
+          <div className="editorial-card p-5 border border-[#e5e5e0] bg-white space-y-1">
+            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Reopens</span>
+            <p className="font-serif text-3xl font-bold text-neutral-900">{pendingReopenCount}</p>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl border border-rose-500/30 bg-rose-950/10 space-y-1">
-            <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider block">Critical Severity</span>
-            <p className="text-2xl font-black text-rose-400">{stats?.critical || 0}</p>
+          <div className="editorial-card p-5 border border-rose-200 bg-rose-50/30 space-y-1">
+            <span className="text-[10px] font-bold text-rose-800 uppercase tracking-widest block">Critical</span>
+            <p className="font-serif text-3xl font-bold text-rose-900">{stats?.critical || 0}</p>
           </div>
         </div>
       )}
 
       {/* Recent Complaints Table */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="editorial-panel p-8 border border-[#e5e5e0] bg-white space-y-6">
+        <div className="flex items-center justify-between border-b border-[#e5e5e0] pb-4">
           <div>
-            <h2 className="text-lg font-bold text-white tracking-tight">Recent Municipal Complaints</h2>
-            <p className="text-xs text-slate-400">Latest issues requiring administrative review</p>
+            <p className="font-script-accent text-xl text-neutral-500">Jurisdiction Log</p>
+            <h2 className="font-serif text-2xl font-bold tracking-[0.15em] uppercase text-neutral-900">
+              RECENT COMPLAINTS
+            </h2>
           </div>
 
           <Link
             to="/municipality/complaints"
-            className="text-xs font-semibold text-cyan-400 hover:underline flex items-center space-x-1"
+            className="text-xs font-semibold uppercase tracking-widest text-neutral-900 hover:underline flex items-center space-x-1"
           >
             <span>View All</span>
             <ChevronRight className="w-4 h-4" />
@@ -192,12 +194,12 @@ const MunicipalityDashboard = () => {
         </div>
 
         {recentComplaints.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 text-xs">No complaints reported in your jurisdiction yet.</div>
+          <div className="p-8 text-center text-neutral-500 text-xs font-light">No complaints reported in your jurisdiction yet.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 font-semibold">
+                <tr className="border-b border-[#e5e5e0] text-neutral-500 font-bold uppercase tracking-wider text-[10px]">
                   <th className="py-3 px-4">Complaint ID</th>
                   <th className="py-3 px-4">Issue</th>
                   <th className="py-3 px-4">Severity</th>
@@ -207,27 +209,27 @@ const MunicipalityDashboard = () => {
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#f0efe9]">
                 {recentComplaints.map((c) => (
-                  <tr key={c._id} className="hover:bg-slate-900/60 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-black text-cyan-400">{c.complaintId}</td>
-                    <td className="py-3.5 px-4 font-semibold text-white">{c.issueType}</td>
+                  <tr key={c._id} className="hover:bg-[#f9f8f6] transition-colors">
+                    <td className="py-3.5 px-4 font-mono font-bold text-neutral-900">{c.complaintId}</td>
+                    <td className="py-3.5 px-4 font-semibold text-neutral-900">{c.issueType}</td>
                     <td className="py-3.5 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getSeverityBadge(c.severity)}`}>
+                      <span className={`px-2 py-0.5 text-[9px] font-bold border uppercase tracking-wider ${getSeverityBadge(c.severity)}`}>
                         {c.severity}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-300 max-w-xs truncate">{c.address || 'Captured GPS Location'}</td>
+                    <td className="py-3.5 px-4 text-neutral-600 max-w-xs truncate font-light">{c.address || 'Captured GPS Location'}</td>
                     <td className="py-3.5 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadge(c.status)}`}>
+                      <span className={`px-2 py-0.5 text-[9px] font-bold border uppercase tracking-wider ${getStatusBadge(c.status)}`}>
                         {c.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-400">{new Date(c.createdAt).toLocaleDateString()}</td>
+                    <td className="py-3.5 px-4 text-neutral-500">{new Date(c.createdAt).toLocaleDateString()}</td>
                     <td className="py-3.5 px-4 text-right">
                       <Link
                         to={`/municipality/complaints/${c.complaintId}`}
-                        className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 font-semibold text-[11px] transition-all"
+                        className="px-3 py-1 border border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white font-semibold text-[10px] uppercase tracking-wider transition-all"
                       >
                         Inspect
                       </Link>
