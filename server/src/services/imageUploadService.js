@@ -75,10 +75,11 @@ export const processAndUploadRoadImage = async (buffer, folderOrOptions = {}) =>
     const apiKey = process.env.CLOUDINARY_API_KEY;
 
     if (!cloudName || !apiKey || cloudName.includes('demo') || cloudName.includes('your_')) {
-      const mockUrl = `https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&w=1200&auto=format&fit=crop`;
+      const mimeType = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
+      const base64DataUrl = `data:${mimeType};base64,${processedBuffer.toString('base64')}`;
       return resolve({
-        imageUrl: mockUrl,
-        secure_url: mockUrl,
+        imageUrl: base64DataUrl,
+        secure_url: base64DataUrl,
         publicId: `${folderPath}/${publicId}`,
         width: processedMeta.width || width,
         height: processedMeta.height || height,

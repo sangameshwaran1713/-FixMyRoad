@@ -35,6 +35,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await loginApi({ email, password });
       if (response.success && response.data?.user) {
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+        }
         setUser(response.data.user);
         return { success: true, user: response.data.user };
       }
@@ -61,6 +64,7 @@ export const AuthProvider = ({ children }) => {
           role: demoRole,
           isActive: true,
         };
+        localStorage.setItem('token', 'dev_guest_token');
         setUser(demoUser);
         return { success: true, user: demoUser };
       }
@@ -77,6 +81,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await registerApi({ name, email, password, confirmPassword, phone });
       if (response.success && response.data?.user) {
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+        }
         setUser(response.data.user);
         return { success: true, user: response.data.user };
       }
@@ -89,6 +96,7 @@ export const AuthProvider = ({ children }) => {
         role: 'CITIZEN',
         isActive: true,
       };
+      localStorage.setItem('token', 'dev_guest_token');
       setUser(demoUser);
       return { success: true, user: demoUser };
     }
@@ -101,6 +109,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
+      localStorage.removeItem('token');
       setUser(null);
     }
   };

@@ -8,11 +8,23 @@ const api = axios.create({
   },
 });
 
+// Request interceptor to attach Bearer token from localStorage
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Response interceptor for generic error handling
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const message = error.response?.data?.message || 'Something went wrong';
+    const message = error.response?.data?.detail || error.response?.data?.message || error.message || 'Something went wrong';
     return Promise.reject(new Error(message));
   }
 );

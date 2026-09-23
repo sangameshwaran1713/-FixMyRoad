@@ -36,8 +36,9 @@ async def predict_road_damage(image: UploadFile = File(...)):
         # Process image bytes with Pillow/OpenCV
         _, img_np, width, height = process_image_bytes(contents)
 
-        # Run YOLO model prediction
-        result = model_service.predict(img_np, width, height)
+        # Run 2-Stage model prediction & validation
+        filename = image.filename or "uploaded_photo.jpg"
+        result = model_service.predict(img_np, width, height, filename=filename)
 
         return result
     except ValueError as ve:

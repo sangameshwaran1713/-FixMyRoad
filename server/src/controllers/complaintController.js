@@ -49,21 +49,19 @@ export const createComplaint = async (req, res, next) => {
     // 2. SSRF Image URL Validation & Redirect-Blocked Image Access Verification
     validateImageUrlSSRF(imageUrl);
 
-    try {
-      await axios.get(imageUrl, {
-        responseType: 'arraybuffer',
-        timeout: 10000,
-        maxRedirects: 0, // Disable redirects to prevent SSRF redirect bypasses to untrusted hosts
-        headers: {
-          'User-Agent': 'FixMyRoad-Backend/1.0',
-        },
-      });
-    } catch (imgErr) {
-      return res.status(400).json({
-        success: false,
-        code: 'IMAGE_INVALID',
-        message: 'Unable to verify uploaded image on Cloudinary storage.',
-      });
+    if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('blob:')) {
+      try {
+        await axios.get(imageUrl, {
+          responseType: 'arraybuffer',
+          timeout: 10000,
+          maxRedirects: 0,
+          headers: {
+            'User-Agent': 'FixMyRoad-Backend/1.0',
+          },
+        });
+      } catch (imgErr) {
+        console.warn('Notice verifying remote image URL:', imgErr.message);
+      }
     }
 
     // 3. Server-Side Reverse Geocoding

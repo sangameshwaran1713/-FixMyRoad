@@ -11,7 +11,7 @@ async def lifespan(app: FastAPI):
     # Load YOLO model into memory ONCE during application startup
     model_service.load_model()
     yield
-    print("🛑 FixMyRoad AI Service shutting down...")
+    print("[AI Service] FixMyRoad AI Service shutting down...")
 
 app = FastAPI(
     title="FixMyRoad AI Service",
