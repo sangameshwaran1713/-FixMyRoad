@@ -60,7 +60,7 @@ const demoMunicipalities = [
     district: 'Madurai South',
     contactEmail: 'south.coastal@municipality.demo.gov',
     contactPhone: '+91 452 2530 003',
-    notificationMethod: 'MULTIPLE',
+    notificationMethod: 'ALL',
     active: true,
     boundary: {
       type: 'Polygon',

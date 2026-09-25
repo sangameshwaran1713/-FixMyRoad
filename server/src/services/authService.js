@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { sendOTPEmail } from './notification/emailNotificationService.js';
 
 /**
  * Generate signed JWT token
@@ -26,9 +27,11 @@ export const sanitizeUser = (user) => {
     id: user._id,
     name: user.name,
     email: user.email,
+    username: user.username || null,
     phone: user.phone || '',
     role: user.role,
     isActive: user.isActive,
+    isEmailVerified: user.isEmailVerified || false,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -63,7 +66,7 @@ export const sendTokenResponse = (user, statusCode, res, message) => {
 };
 
 /**
- * Register new user service function
+ * Register new user service function (Sends 6-digit OTP for Citizen Email Verification)
  */
 export const registerUser = async ({ name, email, password, phone }) => {
   const normalizedEmail = email.toLowerCase().trim();
@@ -76,6 +79,10 @@ export const registerUser = async ({ name, email, password, phone }) => {
     throw error;
   }
 
+  // Generate 6-digit OTP
+  const rawOTP = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
   // FORCE role = "CITIZEN" regardless of what payload provided
   const user = await User.create({
     name: name.trim(),
@@ -84,22 +91,123 @@ export const registerUser = async ({ name, email, password, phone }) => {
     phone: phone ? phone.trim() : '',
     role: 'CITIZEN', // STRICT REQUIREMENT: Ignore role injection
     isActive: true,
+    isEmailVerified: false,
+    emailVerificationOTP: rawOTP,
+    otpExpiresAt,
   });
+
+  console.log(`\n==================================================`);
+  console.log(`📩 CITIZEN EMAIL VERIFICATION OTP`);
+  console.log(`To: ${normalizedEmail}`);
+  console.log(`OTP Code: ${rawOTP} (Valid for 10 minutes)`);
+  console.log(`==================================================\n`);
+
+  // Dispatch real email via SMTP
+  try {
+    await sendOTPEmail({ recipient: normalizedEmail, otp: rawOTP, name: name.trim() });
+  } catch (emailErr) {
+    console.error('❌ Failed to dispatch OTP email:', emailErr.message);
+  }
+
+  return { user, rawOTP };
+};
+
+/**
+ * Verify Citizen Email OTP
+ */
+export const verifyEmailOTP = async ({ email, otp }) => {
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await User.findOne({ email: normalizedEmail }).select('+emailVerificationOTP +otpExpiresAt');
+
+  if (!user) {
+    const error = new Error('User not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (user.isEmailVerified) {
+    return user;
+  }
+
+  if (!user.emailVerificationOTP || user.emailVerificationOTP !== otp.trim()) {
+    const error = new Error('Invalid OTP code. Please check your email.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (user.otpExpiresAt && new Date() > user.otpExpiresAt) {
+    const error = new Error('OTP has expired. Please request a new code.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  user.isEmailVerified = true;
+  user.emailVerificationOTP = undefined;
+  user.otpExpiresAt = undefined;
+  await user.save();
 
   return user;
 };
 
 /**
- * Authenticate user service function
+ * Resend Verification OTP
  */
-export const authenticateUser = async ({ email, password }) => {
+export const resendVerificationOTP = async (email) => {
   const normalizedEmail = email.toLowerCase().trim();
+  const user = await User.findOne({ email: normalizedEmail });
 
-  // Find user and explicitly select password field
-  const user = await User.findOne({ email: normalizedEmail }).select('+password');
+  if (!user) {
+    const error = new Error('User not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (user.isEmailVerified) {
+    const error = new Error('Email is already verified');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const rawOTP = Math.floor(100000 + Math.random() * 900000).toString();
+  user.emailVerificationOTP = rawOTP;
+  user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  await user.save();
+
+  console.log(`\n==================================================`);
+  console.log(`📩 RESENT CITIZEN EMAIL VERIFICATION OTP`);
+  console.log(`To: ${normalizedEmail}`);
+  console.log(`OTP Code: ${rawOTP} (Valid for 10 minutes)`);
+  console.log(`==================================================\n`);
+
+  // Dispatch real email via SMTP
+  try {
+    await sendOTPEmail({ recipient: normalizedEmail, otp: rawOTP, name: user.name });
+  } catch (emailErr) {
+    console.error('❌ Failed to dispatch OTP email:', emailErr.message);
+  }
+
+  return { success: true, rawOTP };
+};
+
+/**
+ * Authenticate user service function (Accepts email for Citizens or username/email for Officers/Admins)
+ */
+export const authenticateUser = async ({ identifier, email, username, password }) => {
+  const loginKey = (identifier || email || username || '').toLowerCase().trim();
+
+  if (!loginKey) {
+    const error = new Error('Username or Email is required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Find user by either email OR username
+  const user = await User.findOne({
+    $or: [{ email: loginKey }, { username: loginKey }]
+  }).select('+password');
   
   if (!user) {
-    const error = new Error('Invalid email or password');
+    const error = new Error('Invalid credentials');
     error.statusCode = 401;
     throw error;
   }
@@ -114,8 +222,17 @@ export const authenticateUser = async ({ email, password }) => {
   // Verify password using bcrypt compare
   const isMatch = await user.matchPassword(password);
   if (!isMatch) {
-    const error = new Error('Invalid email or password');
+    const error = new Error('Invalid credentials');
     error.statusCode = 401;
+    throw error;
+  }
+
+  // Enforce email verification check for CITIZEN role
+  if (user.role === 'CITIZEN' && !user.isEmailVerified) {
+    const error = new Error('Email verification required. Please enter the OTP sent to your email.');
+    error.statusCode = 403;
+    error.requiresVerification = true;
+    error.email = user.email;
     throw error;
   }
 

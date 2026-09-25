@@ -34,6 +34,20 @@ const auditLogSchema = new mongoose.Schema({
   },
 });
 
+// Immutable Collection: Prevent modifications and deletions
+auditLogSchema.pre('remove', function(next) {
+  next(new Error('Audit logs are immutable and cannot be deleted.'));
+});
+auditLogSchema.pre('updateOne', function(next) {
+  next(new Error('Audit logs are immutable and cannot be updated.'));
+});
+auditLogSchema.pre('updateMany', function(next) {
+  next(new Error('Audit logs are immutable and cannot be updated.'));
+});
+auditLogSchema.pre('findOneAndUpdate', function(next) {
+  next(new Error('Audit logs are immutable and cannot be updated.'));
+});
+
 const AuditLog = mongoose.model('AuditLog', auditLogSchema);
 
 export default AuditLog;

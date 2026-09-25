@@ -3,6 +3,8 @@ import {
   register, 
   login, 
   logout, 
+  verifyOTP,
+  resendOTP,
   getCurrentUser, 
   protectedTest,
   citizenTest,
@@ -16,6 +18,8 @@ const router = express.Router();
 
 // Public Authentication Endpoints
 router.post('/register', register);
+router.post('/verify-otp', verifyOTP);
+router.post('/resend-otp', resendOTP);
 router.post('/login', login);
 router.post('/logout', logout);
 

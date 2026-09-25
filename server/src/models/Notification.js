@@ -26,6 +26,7 @@ const notificationSchema = new mongoose.Schema(
         'MUNICIPALITY_ASSIGNED',
         'RESOLVED',
         'REOPENED',
+        'COMPLAINT_ESCALATED',
         'SYSTEM',
       ],
       required: [true, 'Notification type is required'],

@@ -1,6 +1,8 @@
 import { 
   registerUser, 
   authenticateUser, 
+  verifyEmailOTP,
+  resendVerificationOTP,
   sendTokenResponse, 
   sanitizeUser 
 } from '../services/authService.js';
@@ -10,7 +12,7 @@ import {
 } from '../validators/authValidators.js';
 
 /**
- * @desc    Register a new user (Strictly forces CITIZEN role)
+ * @desc    Register a new user (Strictly forces CITIZEN role & dispatches OTP)
  * @route   POST /api/auth/register
  * @access  Public
  */
@@ -28,11 +30,62 @@ export const register = async (req, res, next) => {
       });
     }
 
-    // Register user service (Forces role = CITIZEN)
-    const user = await registerUser({ name, email, password, phone });
+    // Register user service (Forces role = CITIZEN and generates OTP)
+    const { user, rawOTP } = await registerUser({ name, email, password, phone });
 
-    // Return token and sanitized user
-    sendTokenResponse(user, 201, res, 'Registration successful');
+    res.status(201).json({
+      success: true,
+      requiresVerification: true,
+      message: 'Registration successful! A 6-digit OTP has been dispatched to your email.',
+      email: user.email,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Verify Citizen Email OTP
+ * @route   POST /api/auth/verify-otp
+ * @access  Public
+ */
+export const verifyOTP = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and 6-digit OTP code are required.',
+      });
+    }
+
+    const user = await verifyEmailOTP({ email, otp });
+    sendTokenResponse(user, 200, res, 'Email verified successfully! You are now logged in.');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Resend Email Verification OTP
+ * @route   POST /api/auth/resend-otp
+ * @access  Public
+ */
+export const resendOTP = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email address is required.',
+      });
+    }
+
+    await resendVerificationOTP(email);
+    res.status(200).json({
+      success: true,
+      message: 'A new 6-digit OTP has been sent to your email.',
+    });
   } catch (error) {
     next(error);
   }
@@ -45,10 +98,10 @@ export const register = async (req, res, next) => {
  */
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, email, username, password } = req.body;
 
     // Validate inputs
-    const { isValid, errors } = validateLoginInput({ email, password });
+    const { isValid, errors } = validateLoginInput({ identifier, email, username, password });
     if (!isValid) {
       return res.status(400).json({
         success: false,
@@ -58,11 +111,19 @@ export const login = async (req, res, next) => {
     }
 
     // Authenticate user
-    const user = await authenticateUser({ email, password });
+    const user = await authenticateUser({ identifier, email, username, password });
 
     // Return token and sanitized user
     sendTokenResponse(user, 200, res, 'Login successful');
   } catch (error) {
+    if (error.requiresVerification) {
+      return res.status(403).json({
+        success: false,
+        requiresVerification: true,
+        email: error.email,
+        message: error.message,
+      });
+    }
     next(error);
   }
 };

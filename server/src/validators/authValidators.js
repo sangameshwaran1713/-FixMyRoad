@@ -45,11 +45,12 @@ export const validateRegisterInput = ({ name, email, password, confirmPassword }
 /**
  * Validate login input payload
  */
-export const validateLoginInput = ({ email, password }) => {
+export const validateLoginInput = ({ identifier, email, username, password }) => {
   const errors = [];
+  const key = identifier || email || username;
 
-  if (!email || typeof email !== 'string' || email.trim().length === 0) {
-    errors.push('Email is required');
+  if (!key || typeof key !== 'string' || key.trim().length === 0) {
+    errors.push('Username or Email is required');
   }
 
   if (!password || typeof password !== 'string' || password.length === 0) {

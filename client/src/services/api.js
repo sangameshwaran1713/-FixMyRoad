@@ -24,8 +24,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const message = error.response?.data?.detail || error.response?.data?.message || error.message || 'Something went wrong';
-    return Promise.reject(new Error(message));
+    const responseData = error.response?.data || {};
+    const message = responseData.detail || responseData.message || error.message || 'Something went wrong';
+    
+    const errObj = new Error(message);
+    if (responseData.requiresVerification) {
+      errObj.requiresVerification = true;
+      errObj.email = responseData.email;
+    }
+    return Promise.reject(errObj);
   }
 );
 

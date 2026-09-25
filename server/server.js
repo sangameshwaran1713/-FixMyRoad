@@ -4,6 +4,7 @@ import app from './src/app.js';
 import connectDB from './src/config/database.js';
 import { validateProductionConfig, getSafeConfigSummary } from './src/config/productionConfig.js';
 import { startNotificationProcessor, stopNotificationProcessor } from './src/services/notification/notificationProcessor.js';
+import { startEscalationCron } from './src/services/escalationCron.js';
 
 // Load environment variables
 dotenv.config();
@@ -25,6 +26,9 @@ const server = app.listen(PORT, () => {
 
   // Start background notification processor poller
   startNotificationProcessor();
+  
+  // Start automated SLA escalation engine
+  startEscalationCron();
 });
 
 // 4. Graceful Shutdown Handler

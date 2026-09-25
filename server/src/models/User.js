@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,10})+$/,
         'Please enter a valid email address',
       ],
     },
@@ -29,9 +29,9 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: [true, 'Phone number is required'],
+      required: false,
       trim: true,
-      match: [/^\+?[1-9]\d{1,14}$/, 'Please enter a valid phone number'],
+      default: '',
     },
     role: {
       type: String,
@@ -43,9 +43,43 @@ const userSchema = new mongoose.Schema(
       ref: 'Municipality',
       default: null,
     },
+    departmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Department',
+      default: null,
+    },
+    hierarchyLevelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'HierarchyLevel',
+      default: null,
+    },
+    username: {
+      type: String,
+      unique: true,
+      sparse: true, // allows null/undefined for citizens without enforcing uniqueness on empty
+      lowercase: true,
+      trim: true,
+      minlength: [3, 'Username must be at least 3 characters long'],
+    },
     isActive: {
       type: Boolean,
       default: true,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationOTP: {
+      type: String,
+      select: false,
+    },
+    otpExpiresAt: {
+      type: Date,
+      select: false,
+    },
+    civicTrustScore: {
+      type: Number,
+      default: 100,
     },
   },
   {
@@ -70,6 +104,11 @@ userSchema.pre('save', async function (next) {
 
 // Instance method to compare password for login
 userSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Alias for compatibility (authService.js uses matchPassword)
+userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

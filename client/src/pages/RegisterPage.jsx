@@ -1,23 +1,44 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { User, Mail, Phone, Lock, AlertCircle, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 const RegisterPage = () => {
+  const location = useLocation();
+  const initialEmail = location.state?.email || '';
+  const initialStep = location.state?.step || 'REGISTER';
+
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
+    email: initialEmail,
     phone: '',
     password: '',
     confirmPassword: '',
   });
 
+  const [step, setStep] = useState(initialStep); // 'REGISTER' | 'OTP'
+  const [registeredEmail, setRegisteredEmail] = useState(initialEmail);
+  const [otpCode, setOtpCode] = useState('');
+  const [devOTP, setDevOTP] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, user, isAuthenticated } = useAuth();
+  const { register, verifyOTP, resendOTP, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // If redirected from login because verification is needed, auto-trigger resend OTP
+  useEffect(() => {
+    if (initialStep === 'OTP' && initialEmail) {
+      resendOTP(initialEmail).then((res) => {
+        if (res.success) {
+          if (res.devOTP) setDevOTP(res.devOTP);
+          setInfoMessage(`A fresh 6-digit OTP verification code has been dispatched to ${initialEmail}.`);
+        }
+      });
+    }
+  }, [initialStep, initialEmail]);
 
   // Redirect if user is already authenticated
   React.useEffect(() => {
@@ -83,7 +104,10 @@ const RegisterPage = () => {
       );
 
       if (result.success) {
-        navigate('/citizen/dashboard', { replace: true });
+        setRegisteredEmail(formData.email);
+        setDevOTP(result.devOTP || '');
+        setInfoMessage(`A 6-digit verification code has been dispatched to ${formData.email}.`);
+        setStep('OTP');
       } else {
         setErrorMessage(result.error || 'Registration failed');
       }
@@ -93,6 +117,112 @@ const RegisterPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    if (!otpCode || otpCode.length < 6) {
+      setErrorMessage('Please enter the 6-digit OTP code.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const result = await verifyOTP(registeredEmail, otpCode);
+      if (result.success) {
+        navigate('/citizen/dashboard', { replace: true });
+      } else {
+        setErrorMessage(result.error || 'Verification failed');
+      }
+    } catch (err) {
+      setErrorMessage('Verification error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setErrorMessage('');
+    setInfoMessage('');
+    const res = await resendOTP(registeredEmail);
+    if (res.success) {
+      if (res.devOTP) setDevOTP(res.devOTP);
+      setInfoMessage('A new OTP code has been dispatched to your email.');
+    } else {
+      setErrorMessage(res.error || 'Failed to resend OTP.');
+    }
+  };
+
+  if (step === 'OTP') {
+    return (
+      <div className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-lg mx-auto bg-[#f9f8f6]">
+        <div className="editorial-panel p-8 sm:p-10 border border-[#e5e5e0] bg-white shadow-sm">
+          <div className="text-center space-y-2 mb-6">
+            <div className="frame-box mx-auto text-xs">F</div>
+            <p className="font-script-accent text-2xl text-neutral-500">Verification Required</p>
+            <h2 className="font-serif text-3xl font-bold tracking-[0.2em] uppercase text-neutral-900">
+              ENTER OTP CODE
+            </h2>
+            <p className="text-xs text-neutral-500 mt-2">
+              We sent a 6-digit verification code to <span className="font-semibold text-neutral-900">{registeredEmail}</span>
+            </p>
+            <div className="line-divider max-w-xs mx-auto my-3">❖</div>
+          </div>
+
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {infoMessage && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+              <span>{infoMessage}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleVerifyOTP} className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-700 mb-1.5 text-center">
+                6-Digit Security OTP
+              </label>
+              <input
+                id="otp-code-input"
+                type="text"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                placeholder="123456"
+                required
+                className="w-full bg-[#f9f8f6] border border-[#e5e5e0] focus:bg-white focus:border-neutral-900 py-3 text-center text-lg tracking-[0.4em] font-mono text-neutral-900 outline-none transition-all"
+              />
+            </div>
+
+            <button
+              id="btn-verify-otp"
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full editorial-btn text-white py-3.5 text-xs font-bold tracking-[0.2em] cursor-pointer disabled:opacity-50"
+            >
+              {isSubmitting ? 'VERIFYING...' : 'VERIFY & COMPLETE REGISTRATION'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center space-y-2">
+            <button
+              type="button"
+              onClick={handleResendOTP}
+              className="text-xs text-neutral-600 hover:text-neutral-900 underline font-medium"
+            >
+              Didn't receive code? Resend OTP
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-lg mx-auto bg-[#f9f8f6]">

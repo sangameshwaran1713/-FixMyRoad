@@ -105,6 +105,29 @@ const complaintSchema = new mongoose.Schema(
       ref: 'Municipality',
       required: [true, 'Municipality ID is required'],
     },
+    departmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Department',
+      default: null,
+    },
+    currentHierarchyLevelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'HierarchyLevel',
+      default: null,
+    },
+    slaDeadline: {
+      type: Date,
+      default: null,
+    },
+    isDuplicate: {
+      type: Boolean,
+      default: false,
+    },
+    duplicateOf: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Complaint',
+      default: null,
+    },
     status: {
       type: String,
       enum: [
@@ -133,6 +156,15 @@ const complaintSchema = new mongoose.Schema(
       ref: 'User',
       default: null,
     },
+    contractorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    upvotes: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    }],
     resolutionComment: {
       type: String,
       default: '',

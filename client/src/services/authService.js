@@ -8,6 +8,14 @@ export const loginApi = async (credentials) => {
   return await api.post('/auth/login', credentials);
 };
 
+export const verifyOTPApi = async (data) => {
+  return await api.post('/auth/verify-otp', data);
+};
+
+export const resendOTPApi = async (data) => {
+  return await api.post('/auth/resend-otp', data);
+};
+
 export const logoutApi = async () => {
   return await api.post('/auth/logout');
 };

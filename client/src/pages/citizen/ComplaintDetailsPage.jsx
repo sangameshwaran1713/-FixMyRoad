@@ -312,6 +312,78 @@ const ComplaintDetailsPage = () => {
             </div>
           </div>
 
+          {/* Hierarchy Level Card */}
+          {complaint.currentHierarchyLevelId && (
+            <div className="glass-panel p-6 rounded-2xl border border-amber-500/30 bg-amber-950/10 space-y-4">
+              <h2 className="text-sm font-bold text-white flex items-center space-x-2">
+                <span>🏛️</span>
+                <span>Current Authority Level</span>
+              </h2>
+
+              <div className="space-y-3 text-xs">
+                <div className="p-3 rounded-xl bg-amber-900/20 border border-amber-500/30">
+                  <span className="text-amber-400/70 block font-semibold mb-1">Escalated To</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="w-6 h-6 rounded-full bg-amber-500 text-white text-[11px] font-black flex items-center justify-center shrink-0">
+                      {complaint.currentHierarchyLevelId.levelOrder}
+                    </span>
+                    <p className="text-amber-300 font-bold text-sm">
+                      {complaint.currentHierarchyLevelId.levelName}
+                    </p>
+                  </div>
+                </div>
+
+                {complaint.slaDeadline && (
+                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <span className="text-slate-400 block font-semibold mb-1">SLA Deadline</span>
+                    <p className={`font-bold ${new Date(complaint.slaDeadline) < new Date() ? 'text-rose-400' : 'text-emerald-400'}`}>
+                      {new Date(complaint.slaDeadline) < new Date() ? '⚠️ SLA Breached' : '✓ SLA Active'}
+                    </p>
+                    <p className="text-slate-500 text-[11px] mt-0.5">
+                      {new Date(complaint.slaDeadline).toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                )}
+
+                {/* Escalation Progress */}
+                <div className="space-y-1.5">
+                  <span className="text-slate-400 font-semibold block">Escalation Path:</span>
+                  {[
+                    { level: 1, name: 'Ward Officer' },
+                    { level: 2, name: 'Zone Inspector' },
+                    { level: 3, name: 'Municipal Manager' },
+                    { level: 4, name: 'District Authority' },
+                  ].map((item) => {
+                    const current = complaint.currentHierarchyLevelId.levelOrder;
+                    const isPast = item.level < current;
+                    const isCurrent = item.level === current;
+                    return (
+                      <div
+                        key={item.level}
+                        className={`flex items-center space-x-2 p-2 rounded-lg text-[11px] font-semibold ${
+                          isCurrent
+                            ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                            : isPast
+                            ? 'bg-rose-900/20 border border-rose-500/20 text-rose-400/70'
+                            : 'bg-slate-900/40 border border-slate-800 text-slate-500'
+                        }`}
+                      >
+                        <span className={`w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center shrink-0 ${
+                          isCurrent ? 'bg-amber-500 text-white' : isPast ? 'bg-rose-700 text-white' : 'bg-slate-700 text-slate-400'
+                        }`}>
+                          {item.level}
+                        </span>
+                        <span>{item.name}</span>
+                        {isCurrent && <span className="ml-auto text-[10px] bg-amber-500/30 px-1.5 py-0.5 rounded">CURRENT</span>}
+                        {isPast && <span className="ml-auto text-[10px]">escalated</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Status History Timeline */}
           <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
             <h2 className="text-sm font-bold text-white flex items-center space-x-2">

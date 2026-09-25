@@ -7,18 +7,27 @@ import { generateComplaintId } from './complaintIdService.js';
 import { createInAppNotification } from './notificationService.js';
 import { createMunicipalityOutboxEvents } from './notification/notificationService.js';
 
+import HierarchyLevel from '../models/HierarchyLevel.js';
+
 /**
  * Creates a new complaint and associated history, audit log, citizen notification,
  * and outbox municipality notification events/deliveries.
  */
 export const createComplaintWithTransaction = async (complaintData) => {
   const complaintId = await generateComplaintId();
+  
+  // Find Level 1 hierarchy level
+  const level1 = await HierarchyLevel.findOne({ levelOrder: 1 });
+  const slaDeadline = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes SLA for live demo
+
   const fullData = {
     ...complaintData,
     complaintId,
     status: 'SUBMITTED',
     reportCount: 1,
     parentComplaintId: null,
+    currentHierarchyLevelId: level1 ? level1._id : null,
+    slaDeadline,
   };
 
   let session = null;
@@ -190,6 +199,7 @@ export const getCitizenComplaints = async ({ citizenId, page = 1, limit = 10, st
 export const getComplaintByIdWithRBAC = async (complaintIdParam, user) => {
   const complaint = await Complaint.findOne({ complaintId: complaintIdParam })
     .populate('municipalityId', 'name code state district contactEmail contactPhone notificationMethod apiEndpoint')
+    .populate('currentHierarchyLevelId', 'levelName levelOrder escalationSlaDays')
     .exec();
 
   if (!complaint) {

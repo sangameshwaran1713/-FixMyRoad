@@ -80,6 +80,7 @@ export const getComplaintDetails = async (req, res, next) => {
       .populate('citizenId', 'name email phone')
       .populate('assignedTo', 'name email role phone')
       .populate('municipalityId', 'name code state district contactEmail contactPhone notificationMethod apiEndpoint')
+      .populate('currentHierarchyLevelId', 'levelName levelOrder escalationSlaDays')
       .exec();
 
     res.status(200).json({

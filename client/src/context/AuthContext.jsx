@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { registerApi, loginApi, logoutApi, getMeApi } from '../services/authService';
+import { registerApi, loginApi, verifyOTPApi, resendOTPApi, logoutApi, getMeApi } from '../services/authService';
 
 const AuthContext = createContext(null);
 
@@ -12,14 +12,21 @@ export const AuthProvider = ({ children }) => {
   const checkAuthStatus = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setUser(null);
+        return;
+      }
       const response = await getMeApi();
       if (response.success && response.data?.user) {
         setUser(response.data.user);
       } else {
         setUser(null);
+        localStorage.removeItem('token');
       }
     } catch (err) {
       setUser(null);
+      localStorage.removeItem('token');
     } finally {
       setLoading(false);
     }
@@ -29,11 +36,15 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  // Login handler
-  const login = async (email, password) => {
+  // Login handler — accepts identifier (email or username) & password
+  const login = async (identifierOrEmail, password) => {
     setError(null);
     try {
-      const response = await loginApi({ email, password });
+      const credentials = typeof identifierOrEmail === 'object'
+        ? identifierOrEmail
+        : { identifier: identifierOrEmail, password };
+        
+      const response = await loginApi(credentials);
       if (response.success && response.data?.user) {
         if (response.token) {
           localStorage.setItem('token', response.token);
@@ -43,43 +54,41 @@ export const AuthProvider = ({ children }) => {
       }
       throw new Error(response.message || 'Login failed');
     } catch (err) {
-      const isTestAccount = email.endsWith('@fixmyroad.local') || email.includes('citizen') || email.includes('municipality') || email.includes('admin') || email.includes('officer');
-      const errText = err.message || '';
-
-      // If test account or backend DB error (e.g. 500, network error, buffering timeout)
-      if (isTestAccount || errText === 'Something went wrong' || errText.includes('500') || errText.includes('failed') || errText.includes('buffering')) {
-        let demoRole = 'CITIZEN';
-        let demoName = 'Demo Citizen';
-        if (email.includes('admin')) {
-          demoRole = 'SUPER_ADMIN';
-          demoName = 'System Super Admin';
-        } else if (email.includes('municipality') || email.includes('officer')) {
-          demoRole = 'MUNICIPALITY_ADMIN';
-          demoName = 'Central Municipal Admin';
-        }
-        const demoUser = {
-          _id: 'demo-user-' + Date.now(),
-          name: demoName,
-          email: email,
-          role: demoRole,
-          isActive: true,
-        };
-        localStorage.setItem('token', 'dev_guest_token');
-        setUser(demoUser);
-        return { success: true, user: demoUser };
+      if (err.requiresVerification) {
+        return { success: false, requiresVerification: true, email: err.email, error: err.message };
       }
-
-      const message = err.message || 'Invalid email or password';
+      const message = err.message || 'Invalid username/email or password';
       setError(message);
       return { success: false, error: message };
     }
   };
 
-  // Register handler
+  // Register handler — returns verification status and devOTP snippet
   const register = async (name, email, password, confirmPassword, phone) => {
     setError(null);
     try {
       const response = await registerApi({ name, email, password, confirmPassword, phone });
+      if (response.success) {
+        return { 
+          success: true, 
+          requiresVerification: response.requiresVerification, 
+          email: response.email,
+          devOTP: response.devOTP
+        };
+      }
+      throw new Error(response.message || 'Registration failed');
+    } catch (err) {
+      const message = err.message || 'Registration failed. Please try again.';
+      setError(message);
+      return { success: false, error: message };
+    }
+  };
+
+  // OTP Verification handler
+  const verifyOTP = async (email, otp) => {
+    setError(null);
+    try {
+      const response = await verifyOTPApi({ email, otp });
       if (response.success && response.data?.user) {
         if (response.token) {
           localStorage.setItem('token', response.token);
@@ -87,18 +96,21 @@ export const AuthProvider = ({ children }) => {
         setUser(response.data.user);
         return { success: true, user: response.data.user };
       }
-      throw new Error(response.message || 'Registration failed');
+      throw new Error(response.message || 'OTP verification failed');
     } catch (err) {
-      const demoUser = {
-        _id: 'demo-user-new-' + Date.now(),
-        name: name || 'Demo Citizen',
-        email: email,
-        role: 'CITIZEN',
-        isActive: true,
-      };
-      localStorage.setItem('token', 'dev_guest_token');
-      setUser(demoUser);
-      return { success: true, user: demoUser };
+      const message = err.message || 'Invalid OTP code. Please try again.';
+      setError(message);
+      return { success: false, error: message };
+    }
+  };
+
+  // Resend OTP handler
+  const resendOTP = async (email) => {
+    try {
+      const response = await resendOTPApi({ email });
+      return { success: response.success, message: response.message, devOTP: response.devOTP };
+    } catch (err) {
+      return { success: false, error: err.message || 'Failed to resend OTP' };
     }
   };
 
@@ -123,6 +135,8 @@ export const AuthProvider = ({ children }) => {
         error,
         login,
         register,
+        verifyOTP,
+        resendOTP,
         logout,
         checkAuthStatus,
       }}

@@ -381,36 +381,15 @@ const ReportIssuePage = () => {
         },
       };
 
-      let response;
-      try {
-        response = await createComplaintApi(payload);
-      } catch (err) {
-        console.warn('Complaint API notice:', err.message);
-      }
+      let response = await createComplaintApi(payload);
 
       if (response && response.success && response.data?.complaint) {
         setSubmittedComplaint(response.data.complaint);
       } else {
-        const fallbackComplaint = {
-          complaintId: `FMR-2026-${Math.floor(10000 + Math.random() * 90000)}`,
-          status: 'SUBMITTED',
-          issueType: payload.issueType,
-          severity: aiResult?.severity || 'HIGH',
-          municipalityId: municipalityState.data.municipality,
-          createdAt: new Date().toISOString(),
-        };
-        setSubmittedComplaint(fallbackComplaint);
+        throw new Error(response?.message || 'Failed to submit complaint to database.');
       }
     } catch (err) {
-      const fallbackComplaint = {
-        complaintId: `FMR-2026-${Math.floor(10000 + Math.random() * 90000)}`,
-        status: 'SUBMITTED',
-        issueType: issueCategory === 'STREET_LIGHT' ? 'DAMAGED_STREET_LIGHT' : 'POTHOLE',
-        severity: aiResult?.severity || 'HIGH',
-        municipalityId: municipalityState?.data?.municipality || { name: 'Central Metro Municipal Corporation', code: 'MUN001' },
-        createdAt: new Date().toISOString(),
-      };
-      setSubmittedComplaint(fallbackComplaint);
+      setErrorMessage(err.message || 'Failed to submit complaint to database. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
